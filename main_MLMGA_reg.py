@@ -29,7 +29,6 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 torch.set_default_dtype(torch.float32)
 torch.set_default_device(device)
 torch.nn.Module.dump_patches = True
-
 script_dir = ""
 if script_dir not in sys.path:
     sys.path.append(script_dir)
@@ -43,7 +42,6 @@ warnings.filterwarnings('ignore')
 from rdkit import RDLogger
 lg = RDLogger.logger()
 lg.setLevel(RDLogger.CRITICAL)
-
 EPOCHS = 200
 BATCHSIZE = 32
 PATIENCE = 20
@@ -93,7 +91,6 @@ class EarlyStopping:
             self.trace_func(f"Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...")
         torch.save(model.state_dict(), self.path)
         self.val_loss_min = val_loss
-
 class SMILESDataset(Dataset):
     def __init__(self, dataframe, smiles_list, task_columns, feature_dicts, args):
         self.dataframe = dataframe
@@ -102,20 +99,16 @@ class SMILESDataset(Dataset):
         self.feature_dicts = feature_dicts
         self.args = args
         self.path = args.get('dataset_path', 'default_dataset_path.csv')  # Example path, modify as needed
-
     @cached_property
     def dataset(self):
         print("Loading the dataset...")
         return self._load_dataset()
-
     def _load_dataset(self):
         # Load a big dataset here
         df = pd.read_csv(self.path)
         return df
-
     def __len__(self):
         return len(self.smiles_list)
-
     def __getitem__(self, idx):
         smiles = self.smiles_list[idx]
         # Additional processing as required
@@ -124,38 +117,11 @@ class SMILESDataset(Dataset):
         y_val = torch.tensor(target, dtype=torch.float)
         return (feats, neighbors), y_val
 
-
-class SMILESDatas000et(Dataset):
-    def __init__(self, dataframe, smiles_list, task_columns, feature_dicts, args):
-        self.dataframe = dataframe
-        self.smiles_list = smiles_list
-        self.task_columns = task_columns[0]
-        self.feature_dicts = feature_dicts
-        self.args = args
-
-
-        # Load JSON data
-        def load_json_data(file_path):
-            with open(file_path, 'r') as file:
-                data = json.load(file)
-            return data
-
-        #self.smiles_to_fglist = load_json_data(f"{args['task_name']}_smiles_to_fg_list.json")
-    def __len__(self):
-        return len(self.smiles_list)
-    def __getitem__(self, idx):
-        smiles = self.smiles_list[idx]
-        #fg_list = self.smiles_to_fglist[smiles]
-        target = self.dataframe[self.task_columns].tolist()[idx]
-        smiles, feats, neighbors = get_smiles_array([smiles], self.feature_dicts, self.args)
-        y_val = torch.tensor(target, dtype=torch.float)
-        return  (feats, neighbors), y_val
-
 def create_collate_fn(typical_shapes):
     def collate_fn(batch):
         if not batch:
             return {}, torch.tensor([])
-        #global fg_list
+     
         keys = fg_list +['mol']
         expected_neighbors_keys = [key + f'_{x}_neighbors' for key in keys for x in ['atom', 'bond', 'angle']]
         expected_features_keys = [key + f'_{x}_features' for key in keys for x in ['atom', 'bond', 'angle']]
@@ -250,7 +216,6 @@ def eval(model, loader):
     gc.collect()
     return mean_RMSE, mean_RMSE
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description="Script Parameters")
     parser.add_argument("--EPOCHS", type=int, default=200, help="Number of epochs")
     parser.add_argument("--SEED", type=int, default=3, help="Random seed")
@@ -282,12 +247,10 @@ if __name__ == "__main__":
     #for tuple in [("AngleEncoderV1", True, "MLMGA")]:
         #args["ANGLE_ENCODER"], args["Feature_Fusion"], args["FG_Node"] = tuple
         for task in tasks_details:
-
             task_name, tasks, raw_filename = task
             args["task_name"] = task_name
             if task_name =='ZINC':
                 PILOT = 5000
-
             PREFIX = task_name + "_" + str(script_name[-6:-3]) + "_" + str(SEED) + "_"
             PREFIX_simple = task_name + "_" + str(script_name[-6:-3]) + "_"
             TYPE = task_name
@@ -301,7 +264,6 @@ if __name__ == "__main__":
             TYPE = task_name + "_"+"_".join(PREFIX.split("_")[-4:])
             R = SAVE + "/" + PREFIX + "_result.json"
             feature_filename = raw_filename.replace(".csv", "_full_3.pickle")
-
             filename = raw_filename.replace(".csv", "_full_3")
             prefix_filename = raw_filename.split("/")[-1].replace(".csv", "_full_3")
             try:
@@ -342,7 +304,6 @@ if __name__ == "__main__":
                 with open(FG_PATH, 'w') as f:
                     json.dump(fg_matches, f, indent=4)
             if os.path.exists(FGlist_PATH):
-
                 with open(FGlist_PATH, 'rb') as f:
                     fg_list = pickle.load(f)
             else:
@@ -359,19 +320,15 @@ if __name__ == "__main__":
                 feature_dicts = save_smiles_dicts(smilesList, filename, args)
             smilesList = list(feature_dicts["smiles_to_atom_mask"].keys())
             for smiles in smilesList:
-
                 fg_dict[str(smiles)] =check_functional_groups(smiles, patterns)
             with open(f"{args['task_name']}_smiles_to_fg_list.json", "w") as f:
                 json.dump(fg_dict, f, indent=4)
-
             feature_dicts["smiles_to_functional_group_info"] = fg_dict
-
             remained_df = smiles_tasks_df[smiles_tasks_df["cano_smiles"].isin(feature_dicts["smiles_to_atom_mask"].keys())]
             uncovered_df = smiles_tasks_df.drop(remained_df.index)
             gc.collect()
             torch.cuda.empty_cache()
             cc =canonical_smiles_list[0]
-
             smiles, feats, neighbors = get_smiles_array([cc], feature_dicts, args)
             num_atom_node = feats['mol_atom_features'].shape[-2]
             num_atom_features = feats['mol_atom_features'].shape[-1]
@@ -388,7 +345,6 @@ if __name__ == "__main__":
             val_df = val_df.reset_index(drop=True)
             test_df = test_df.reset_index(drop=True)
             loaders = get_data_loaders(train_df, val_df, test_df, tasks, feature_dicts, True, args)
-
             loss_function = nn.MSELoss()
             if True:
                 C_PATH = SAVE + "/" + PREFIX_simple + "config.json"
@@ -427,7 +383,6 @@ if __name__ == "__main__":
                 best_param = {}
                 best_param["val_epoch"] = 0
                 best_param["val_RMSE"] = 9e8
-
                 early_stopping = EarlyStopping(TYPE=TYPE, patience=PATIENCE, verbose=True)
                 LOSS_PATH = SAVE + "/" + PREFIX +"losses.csv"
                 with open(LOSS_PATH, mode="a", newline="") as file:
@@ -489,7 +444,6 @@ if __name__ == "__main__":
             df['train_RMSE'] = pd.to_numeric(df['train_RMSE'], errors='coerce')
             df['val_RMSE'] = pd.to_numeric(df['val_RMSE'], errors='coerce')
             df[['train_RMSE','val_RMSE']].plot()
-
             plot_filename = LOSS_PATH.replace(".csv","_plot.png") #
             plt.savefig(plot_filename)
             print(f"Loss plot saved as {plot_filename}")

@@ -4,8 +4,6 @@ import torch
 import numpy as np
 import random
 import os
-
-
 def set_seed(seed=42, make_deterministic=True):
     random.seed(seed)
     np.random.seed(seed)
@@ -15,32 +13,16 @@ def set_seed(seed=42, make_deterministic=True):
     if make_deterministic:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
-
     os.environ["PYTHONHASHSEED"] = str(seed)
-
-
 def save_config_as_json(hp_opt, file_path):
     with open(file_path, "w") as file:
         json.dump(dict(hp_opt), file)
-
-
-import yaml
-
-
 def load_config_from_json(file_path):
     with open(file_path, "r") as file:
         return OrderedDict(json.load(file))
-
-
-import json
-import os
-
-
 def save_as_json(data, filename):
     with open(filename, "w") as file:
         json.dump(data, file)
-
-
 def load_from_json(filename):
     with open(filename, "r") as file:
         return json.load(file)

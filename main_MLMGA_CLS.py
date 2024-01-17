@@ -299,7 +299,6 @@ if __name__ == "__main__":
             gc.collect()
        
             patterns, num_functional_groups = get_functional_group_patterns()
-
             FG_PATH = f'{task_name}_functional_groups_matches.json'
             FGlist_PATH = f'{task_name}_fg_list.pkl'
             if os.path.exists(FG_PATH):
@@ -331,7 +330,6 @@ if __name__ == "__main__":
                         pass
                     else:
                         results.append(str(key))
-                
                 
                 return results
             for smiles in smilesList:
@@ -423,7 +421,6 @@ if __name__ == "__main__":
             best_param["loss_epoch"] = 0
             best_param["val_ROC"] = 0
             best_param["val_loss"] = 9e8
-
             early_stopping = EarlyStopping(TYPE = TYPE, patience=PATIENCE, verbose=True)
             LOSS_PATH = SAVE + "/" + PREFIX +"ROCs.csv"
             with open(LOSS_PATH, mode="a", newline="") as file:

@@ -1,4 +1,7 @@
 
+from rdkit import Chem
+import json
+
 def get_functional_group_patterns():
     functional_groups = {
         'Alcohol': '[#6][OX2H]',
@@ -23,8 +26,6 @@ def check_functional_groups(smiles, patterns):
 
     return results
 
-from rdkit import Chem
-import json
 def get_match_bond_indices(query, mol, match_atom_indices):
     bond_indices = []
     for query_bond in query.GetBonds():
